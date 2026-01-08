@@ -1,0 +1,97 @@
+---
+title: "Longevity analysis"
+author: "Brian Langseth, Melissa Monk, Eric Ward"
+format: pdf
+editor: visual
+---
+
+## Exploration
+
+```{r, echo = TRUE}
+#Load packages
+library(here)
+library(ggplot2)
+library(dplyr)
+
+##
+#Load data and process
+##
+
+data <- readRDS(here("data", "biol_data_ALL.rds"))
+
+#Combine rougheye rockfish and rougheye/blackspotted rockfish complex
+data[grepl("rougheye", data$common_name), "common_name"] <- "rougheye/blackspotted rockfish"
+
+# #Summarize by name and survey, getting maxAge within each as well as count
+# #Gives errors for combinations with no ages
+# name_surv <- data %>%
+#   dplyr::group_by(common_name, survey_id) %>%
+#   dplyr::summarize(maxAge = max(age, na.rm = TRUE),
+#             countAge = sum(!is.na(age)),
+#             .groups = "keep")
+#
+# #Plotting all the surveys by species
+# ggplot(name_surv, aes(x = common_name, y = maxAge, colour = survey_id)) +
+#   geom_point()
+
+#Remove records without ages (or with negative age). 
+data_age <- data %>%
+  dplyr::filter(age > 0)
+
+#Summarize again by name and survey. Add numerical factor for names
+name_surv <- data_age %>% 
+  dplyr::group_by(common_name, survey_id) %>%
+  dplyr::summarize(maxAge = max(age, na.rm = TRUE),
+            countAge = sum(!is.na(age)),
+            .groups = "keep")
+name_surv$species_N <- as.numeric(as.factor(name_surv$common_name))
+
+#To better see ranges across surveys, group by species and provide max and min
+name_range <- name_surv %>%
+  filter(is.finite(maxAge)) %>%
+  group_by(common_name) %>%
+  summarize(rangeMax = max(maxAge, na.rm = TRUE),
+            rangeMin = min(maxAge, na.rm = TRUE)) #%>%
+  # pivot_longer(cols = c(rangeMax, rangeMin),
+  #              names_to = c("range"),
+  #              values_to = c("age"))
+
+##
+#Plotting
+##
+
+#Plotting all the surveys by species
+ggplot(name_surv, aes(x = common_name, y = maxAge, colour = survey_id)) +
+  geom_point() +
+  labs(x = "Common Name",
+       y = "Maximum Age") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0
+    ))
+
+#Plotting all the surveys by species with size dependent on countAge
+ggplot(name_surv, 
+       aes(x = common_name, y = maxAge, colour = survey_id, size = countAge)) +
+  geom_point()
+
+
+#Plotting the range across surveys for each species
+ggplot(name_range, aes(x = common_name)) +
+  geom_linerange(aes(ymin = rangeMin, ymax = rangeMax)) +
+  geom_point(aes(y = rangeMin)) +
+  geom_point(aes(y = rangeMax))+
+  labs(x = "Common Name",
+       y = "Maximum Age") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0
+    ))
+
+
+
+
+
+```
