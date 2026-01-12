@@ -88,9 +88,162 @@ name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
 
 Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code avaialble in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information.
 
-Add list of surveys included
+The surveys included among data available are:
+1. Aleutian Islands Bottom Trawl Survey (AFSC AI)
+2. Gulf of Alaska Bottom Trawl Survey (AFSC GOA)
+3. Eastern & Northern Bering Sea Crab/Groundfish Bottom Trawl Surveys (AFSC EBS, AFSC NBS)
+4. Eastern Bering Sea Slope Bottom Trawl Survey (AFSC BSS)
+5. Fisheries and Oceans Canada Synoptic Bottom Trawl Surveys (with prefix SYN)
+6. Fisheries and Oceans Canada Outside Hard Bottom Longline (HBLL OUT)
+7. Fisheries and Oceans Canada Inside Hard Bottom Longline (HBLL INS)
+8. West Coast Groundfish Bottomtrawl Shelf-Slope Survey (NWFSC Combo)
+9. West Coast Groundfish Slope Survey (NWFSC Slope)
+10. Triennial Shelf Trawl Survey (Triennial, Triennial Canada)
 
-maybe a map of locations
+```{r, include = FALSE}
+
+##-------------------------------------------##
+#Map - Not shown
+##-------------------------------------------##
+
+library(maps)
+library(mapdata)
+
+mapData <- map('worldHires', regions=c("Canada","Mexico","US"),
+               xlim=c(-200, -100), ylim=c(31, 75),
+               col='grey', fill=TRUE, interior=TRUE, lwd=1, plot = FALSE)
+# # map with US states
+# map('state', regions=c("Wash","Oreg","Calif","Idaho","Alaska",
+#                        "Montana","Nevada","Arizona","Utah"),
+#     add=TRUE,
+#     col='grey', fill=TRUE, interior=TRUE, lwd=1)
+# axis(2, at=seq(32,50,2), lab=paste0(seq(32,50,2), "°N"), las=1)
+# axis(1, at=seq(-130,-114,4), lab=paste0(abs(seq(-130,-114,4)), "°W"))
+
+#Plot locations of non-unique locations
+locs <- data %>% dplyr::select(survey_id, lat, lon) %>%
+  dplyr::filter(!is.na(lon)) %>%
+  unique()
+# plot(locs$lat) #look good
+# plot(locs$lon) #need to correct
+locs[which(locs$lon > 0),"lon"] <- locs[which(locs$lon > 0), "lon"] * -1
+
+
+ggplot() +
+  geom_polygon(data = mapData, aes(x = long, y = lat, group = group), 
+               fill = "black", color = "black") +
+  coord_cartesian(xlim = c(-180, -110), ylim = c(30, 70)) +
+  geom_point(data = locs, aes(x = lon, y = lat, color = survey_id), size = 1) +
+  guides(color = guide_legend(ncol = 3)) + 
+  theme_void() + 
+  theme(legend.position = c(0.3,0.25))
+
+```
+
+```{r, echo = FALSE}
+
+##-------------------------------------------##
+#More advanced map - Shown
+##-------------------------------------------##
+
+#Another attempt with a better map
+#Pulled parts from surveyjoin/data-raw/09-map-surveys.R
+
+crs_out <- "EPSG:3338"
+world_coordinates <- maps::map("world", plot = FALSE, fill = TRUE) %>%
+  sf::st_as_sf() %>%
+  # sf::st_union() %>%
+  sf::st_transform(crs = crs_out) %>%
+  dplyr::filter(ID %in% c("USA", "Russia", "Canada", "Mexico")) %>%
+  dplyr::mutate(ID = ifelse(ID == "USA", "Alaska", ID))
+
+place_labels <- data.frame(
+  type = c("mainland", "mainland", "mainland", "mainland", "survey",
+           "peninsula", "survey", "survey", "survey", "survey", "survey", "survey"),
+  lab = c("Alaska", "Russia", "Canada", "USA", "West Coast",
+          "Alaska Peninsula", "Aleutian Islands", "Gulf of Alaska",
+          "Bering\nSea\nSlope", "Eastern\nBering Sea", "Northern\nBering Sea", "British Columbia"),
+  angle = c(0, 0, 0, 0, -45, 45, 0, 30, 0, 0, 0, -30),
+  lat = c(63, 62.798276, 58, 42, 40, 56.352495, 53.25, 54.720787,
+          57, 57.456912, 62.25, 51),
+  lon = c(-154, 173.205231, -122, -120, -125.2,
+          -159.029430, -173, -154.794131, -176, -162, -170.5, -131)) %>%
+  dplyr::filter(type != "peninsula") %>%
+  sf::st_as_sf(coords = c("lon", "lat"),
+               crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0") %>%
+  sf::st_transform(crs = crs_out)
+
+#Adjusting coordinates to zoom in: #Obtained from https://www.r-bloggers.com/2019/04/zooming-in-on-maps-with-sf-and-ggplot2/
+disp_win_wgs84 <- st_sfc(st_point(c(-170, 30)), st_point(c(-90, 50)),
+                         crs = 4326)
+disp_win_trans <- st_transform(disp_win_wgs84, crs = crs_out)
+disp_win_coord <- st_coordinates(disp_win_trans)
+
+#Adjusting coordinates of survey points
+locs_trans <- st_as_sf(locs, coords = c("lon", "lat"), crs = 4326)
+
+
+map <- ggplot2::ggplot() +
+  ggplot2::geom_sf(data = world_coordinates,
+                   fill = "grey10",
+                   color = "grey20") +
+  geom_sf(data = locs_trans, mapping = aes(color = survey_id), size = 1) +
+  ggplot2::geom_sf_text(
+    data = place_labels %>% dplyr::filter(type == "mainland"),
+    mapping = aes(label = lab, angle = angle),
+    color = "grey60",
+    size = 3,
+    show.legend = FALSE) + 
+  ggplot2::scale_x_continuous(name = "Longitude °W",
+                              breaks = c(170, seq(-180, -120, 10))) +
+  ggplot2::scale_y_continuous(name = "Latitude °N",
+                              breaks = seq(30, 70, 10)) +
+  ggplot2::coord_sf(xlim = sf::st_bbox(disp_win_trans)[c(1,3)],
+                    ylim = sf::st_bbox(disp_win_trans)[c(2,4)]) +
+  ggplot2::geom_sf_text(
+    data = place_labels %>% dplyr::filter(type == "mainland"),
+    mapping = aes(label = lab, angle = angle),
+    color = "grey60",
+    size = 3,
+    show.legend = FALSE) +
+  ggplot2::geom_sf_text(
+    data = place_labels %>% dplyr::filter(type == "survey"),
+    mapping = aes(label = lab, angle = angle),
+    color = "black",
+    fontface = "bold",
+    size = 1.5,
+    show.legend = FALSE) +
+  ggplot2::geom_sf_text(
+    data = place_labels %>% dplyr::filter(!(type %in% c("mainland", "survey"))),
+    mapping = aes(label = lab, angle = angle),
+    color = "grey10",
+    fontface = "italic",
+    size = 2,
+    show.legend = FALSE) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.margin=unit(c(0,0,0,0), "cm"),
+    strip.background = element_rect(fill = "transparent", colour = "white"),
+    strip.text = element_text(face = "bold"), # , family = font0
+    panel.border = element_rect(colour = "grey20", linewidth = .25, fill = NA),
+    panel.background = element_rect(fill = "white"),
+    panel.grid = element_line(colour="grey80", linewidth=0.5),
+    plot.title = element_text(face = "bold"), # , size = 12, family = font0
+    axis.text = element_text(face = "bold"), # , size = 12 , family = font0
+    legend.position = c(0.32,0.26),
+    legend.text = element_text(size = 6, margin = margin(r = 4, unit = "pt")),
+    legend.key.spacing.x = unit(2, "pt"),
+    legend.background = element_rect(fill = "white", color = NA)
+  ) +
+  guides(color = guide_legend(ncol = 3)) 
+
+map
+ggsave(here("figures", "Map of surveys_fancy.png"), width = 6, height = 6, units = "in")
+
+
+
+
+```
 
 ```{r, include = FALSE}
 
