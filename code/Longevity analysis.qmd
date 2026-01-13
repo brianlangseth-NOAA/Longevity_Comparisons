@@ -1,7 +1,13 @@
 ---
 title: "Longevity analysis"
 author: "Brian Langseth, Melissa Monk, Eric Ward"
-format: pdf
+format: 
+  pdf:
+    geometry:
+      - top=0.5in
+      - left=1in
+      - right=1in
+      - bottom=0.5in
 editor: visual
 editor_options: 
   chunk_output_type: console
@@ -86,21 +92,20 @@ name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
 
 ```
 
-Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code avaialble in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information.
+Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code avaialble in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information. The surveys with age data available include:
 
-The surveys included among data available are:
 1. Aleutian Islands Bottom Trawl Survey (AFSC AI)
-2. Gulf of Alaska Bottom Trawl Survey (AFSC GOA)
-3. Eastern & Northern Bering Sea Crab/Groundfish Bottom Trawl Surveys (AFSC EBS, AFSC NBS)
-4. Eastern Bering Sea Slope Bottom Trawl Survey (AFSC BSS)
-5. Fisheries and Oceans Canada Synoptic Bottom Trawl Surveys (with prefix SYN)
-6. Fisheries and Oceans Canada Outside Hard Bottom Longline (HBLL OUT)
-7. Fisheries and Oceans Canada Inside Hard Bottom Longline (HBLL INS)
-8. West Coast Groundfish Bottomtrawl Shelf-Slope Survey (NWFSC Combo)
-9. West Coast Groundfish Slope Survey (NWFSC Slope)
-10. Triennial Shelf Trawl Survey (Triennial, Triennial Canada)
+1. Gulf of Alaska Bottom Trawl Survey (AFSC GOA)
+1. Eastern & Northern Bering Sea Crab/Groundfish Bottom Trawl Surveys (AFSC EBS, AFSC NBS)
+1. Eastern Bering Sea Slope Bottom Trawl Survey (AFSC BSS)
+1. Fisheries and Oceans Canada Synoptic Bottom Trawl Surveys (with prefix SYN)
+1. Fisheries and Oceans Canada Outside Hard Bottom Longline (HBLL OUT)
+1. Fisheries and Oceans Canada Inside Hard Bottom Longline (HBLL INS)
+1. West Coast Groundfish Bottomtrawl Shelf-Slope Survey (NWFSC Combo)
+1. West Coast Groundfish Slope Survey (NWFSC Slope)
+1. Triennial Shelf Trawl Survey (Triennial, Triennial Canada)
 
-```{r, include = FALSE}
+```{r, include = FALSE, warnings = FALSE}
 
 ##-------------------------------------------##
 #Map - Not shown
@@ -140,11 +145,15 @@ ggplot() +
 
 ```
 
-```{r, echo = FALSE}
+A map of the locations sampled within each survey is provided. 
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 
 ##-------------------------------------------##
 #More advanced map - Shown
 ##-------------------------------------------##
+
+library(sf)
 
 #Another attempt with a better map
 #Pulled parts from surveyjoin/data-raw/09-map-surveys.R
@@ -174,10 +183,10 @@ place_labels <- data.frame(
   sf::st_transform(crs = crs_out)
 
 #Adjusting coordinates to zoom in: #Obtained from https://www.r-bloggers.com/2019/04/zooming-in-on-maps-with-sf-and-ggplot2/
-disp_win_wgs84 <- st_sfc(st_point(c(-170, 30)), st_point(c(-90, 50)),
+disp_win_wgs84 <- sf::st_sfc(st_point(c(-170, 30)), st_point(c(-90, 50)),
                          crs = 4326)
-disp_win_trans <- st_transform(disp_win_wgs84, crs = crs_out)
-disp_win_coord <- st_coordinates(disp_win_trans)
+disp_win_trans <- sf::st_transform(disp_win_wgs84, crs = crs_out)
+disp_win_coord <- sf::st_coordinates(disp_win_trans)
 
 #Adjusting coordinates of survey points
 locs_trans <- st_as_sf(locs, coords = c("lon", "lat"), crs = 4326)
@@ -240,9 +249,6 @@ map <- ggplot2::ggplot() +
 map
 ggsave(here("figures", "Map of surveys_fancy.png"), width = 6, height = 6, units = "in")
 
-
-
-
 ```
 
 ```{r, include = FALSE}
@@ -267,6 +273,8 @@ ggplot(name_surv,
        aes(x = common_name, y = maxAge, colour = survey_id, size = countAge)) +
   geom_point()
 ```
+
+{{< pagebreak >}}
 
 The maximum age from each survey for each species was obtained. Initial figures of maximum ages by survey were difficult to interpret given many surveys occurred within a similar region (e.g. Alaska waters are sampled by at least five separate surveys). However, the range of maximum values from each survey provides an initial determination of the variability across sampled maximum ages for a species. 
 
@@ -304,7 +312,7 @@ p_survey + geom_point(data = name_surv,
 ggsave(here("figures", "Range over surveys_with survey_relative size.png"), width = 8.5, height = 4, units = "in")
 ```
 
-When surveys within an area (either a U.S. state or Canada) are aggregated, the minimum of the range is compressed, reflecting a smaller range across areas.
+When surveys within an area (either Alaska or Canada) are aggregated, the range for the minimum compresses, reflecting a smaller range across areas. For species in surveys that are already aggregated across Washington, Oregon, and California, dissagregating by area expands the range. 
 
 ```{r, echo = FALSE}
 
@@ -327,6 +335,8 @@ p_area
 ggsave(here("figures", "Range over areas.png"), width = 8.5, height = 4, units = "in")
 
 ```
+
+{{< pagebreak >}}
 
 The maximum ages of each individual area were then added to overall range. These areas are colored and ordered from north to south, to provide some initial ability to determine longitudinal patterns in maximum age estimates. A second figure provides the relative sample size of the surveys within each area.
 
@@ -369,6 +379,8 @@ p_area + geom_point(data = name_area,
 ggsave(here("figures", "Range over areas_with survey_relative.png"), width = 8.5, height = 4, units = "in")
 
 ```
+
+{{< pagebreak >}}
 
 If we look at only species that are caught in more than one area. We have something a little easier to look at, and provides a working starting point for the range of longevity estimates across areas. 
 
