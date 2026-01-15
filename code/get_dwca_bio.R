@@ -28,7 +28,10 @@ get_dwca_bio <- function(dwca){
     warning("Occurrance event id does not equal id. Check occurance data")
   }
   
-  temp_data <- temp_measure %>%
+  #Combine all data sets together and pivot wider to get multiple measurements
+  #(that were separate rows) together in different columns for the same record (to do
+  #this have to ensure no other column has unique values - so remove measurementUnit)
+  temp_data <- temp_measure %>% select(!measurementUnit) %>%
     left_join(temp_occur, by = c("occurrenceID", "id")) %>%
     left_join(temp_event, by = c("id", "eventID")) %>%
     pivot_wider(names_from = measurementType, values_from = measurementValue) %>%
