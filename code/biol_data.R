@@ -244,6 +244,17 @@ biol_data_all_US <- bind_rows(biol_data, nwfsc_triCA, nwfsc_tri_all)
 #https://github.com/DFO-NOAA-Pacific/surveyjoin-db/issues/27
 pbs_trawl <- readRDS("data/pbs-all-samples-2025-07-25.rds")
 
+#Check to see if how often the various lengths within the dataset are present
+table(rowSums(is.na(pbs_trawl[,grep("length", colnames(pbs_trawl))])))
+# 1       2       3       4 
+# 9      51 1184384    5622 
+#This means that the VAST majority have only one entry. A few (5622) have none.
+#Only 60 have measurements in more than one column (fork and total at least)
+#Use fork, because its most common expect where it doesn't exist. 
+#Then use whatever is available.
+pbs_trawl <- pbs_trawl %>% 
+  dplyr::mutate(length = ifelse(!is.na(fork_length), fork_length, total_length))
+
 pbs_trawl <- pbs_trawl %>%
   mutate(scientific_name = tolower(species_science_name)) %>%
   semi_join(haul, by = c("fishing_event_id" = "event_id")) %>%
@@ -261,7 +272,7 @@ pbs_trawl <- pbs_trawl %>%
     event_id = fishing_event_id,
     survey_id = survey_abbrev,
     species_id,
-    length_cm = total_length,
+    length_cm = length,
     sex,
     age,
     weight_kg = weight / 1000,
