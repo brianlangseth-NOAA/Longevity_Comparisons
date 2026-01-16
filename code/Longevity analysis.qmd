@@ -145,7 +145,7 @@ ggplot() +
 
 ```
 
-A map of the locations sampled within each survey is provided. 
+A map of the locations sampled within each survey is provided.
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -272,11 +272,24 @@ ggplot(name_surv, aes(x = common_name, y = maxAge, colour = survey_id)) +
 ggplot(name_surv, 
        aes(x = common_name, y = maxAge, colour = survey_id, size = countAge)) +
   geom_point()
+
+#Look at possible breaks for countAge
+plot(name_surv$countAge)
+plot(name_surv$countAge, ylim = c(0, 10000))
+quantile(name_surv$countAge, seq(0,1,by=0.1))
+#Seems like 100, 500, 1000, 2000, 5000+
+
+name_surv <- name_surv %>%
+  mutate(countAgeFactor = cut(countAge, 
+                              breaks = c(0, 100, 500, 1000, 2000, 5000, 64000),
+                              labels = c("(0-100]", "(100-500]", "(500-1000]", 
+                                         "(1000-2000]", "(2000-5000]", "(5000-64000]")))
+
 ```
 
 {{< pagebreak >}}
 
-The maximum age from each survey for each species was obtained. Initial figures of maximum ages by survey were difficult to interpret given many surveys occurred within a similar region (e.g. Alaska waters are sampled by at least five separate surveys). However, the range of maximum values from each survey provides an initial determination of the variability across sampled maximum ages for a species. 
+The maximum age from each survey for each species was obtained. Initial figures of maximum ages by survey were difficult to interpret given many surveys occurred within a similar region (e.g. Alaska waters are sampled by at least five separate surveys). However, the range of maximum values from each survey provides an initial determination of the variability across sampled maximum ages for a species.
 
 ```{r, echo = FALSE}
 
@@ -312,7 +325,7 @@ p_survey + geom_point(data = name_surv,
 ggsave(here("figures", "Range over surveys_with survey_relative size.png"), width = 8.5, height = 4, units = "in")
 ```
 
-When surveys within an area (either Alaska or Canada) are aggregated, the range for the minimum compresses, reflecting a smaller range across areas. For species in surveys that are already aggregated across Washington, Oregon, and California, dissagregating by area expands the range. 
+When surveys within an area (either Alaska or Canada) are aggregated, the range for the minimum compresses, reflecting a smaller range across areas. For species in surveys that are already aggregated across Washington, Oregon, and California, dissagregating by area expands the range.
 
 ```{r, echo = FALSE}
 
@@ -342,7 +355,7 @@ The maximum ages of each individual area were then added to overall range. These
 
 ```{r, echo = FALSE}
 
-#Output range across surveys, with individual areas dded along with the relative sample size
+#Output range across surveys, with individual areas added along with the relative sample size
 p_area + geom_point(data = name_area, 
            aes(x = common_name, y = maxAge, colour = area)) +
   labs(x = "Common Name",
@@ -360,6 +373,7 @@ p_area + geom_point(data = name_area,
     ))
 ggsave(here("figures", "Range over areas_with survey.png"), width = 8.5, height = 4, units = "in")
 
+#Scale size to sqrt of the number of ages
 p_area + geom_point(data = name_area, 
            aes(x = common_name, y = maxAge, 
                colour = area, size = countAge)) +
@@ -382,8 +396,7 @@ ggsave(here("figures", "Range over areas_with survey_relative.png"), width = 8.5
 
 {{< pagebreak >}}
 
-If we look at only species that are caught in more than one area. We have something a little easier to look at, and provides a working starting point for the range of longevity estimates across areas. 
-
+If we look at only species that are caught in more than one area. We have something a little easier to look at, which provides a working starting point for the range of longevity estimates across areas. Based on this figure of the ranges of maximum ages, we see that the range varies by species. Of the `r temp = name_area_range %>% dplyr::filter(common_name %in% dup_species$common_name)` `r nrow(temp)` species that occur in multiple areas, a total of `r sum(name_area_range$diff > 40)` species have a range greater than 40, a total of `r sum(name_area_range$diff > 25)` species have a range greater than 25, and a total of `r sum(temp$diff < 10)` have a range of less than 10. 
 
 ```{r, echo = FALSE}
 
@@ -411,7 +424,31 @@ ggsave(here("figures", "Range over areas_subset.png"), width = 8.5, height = 4, 
 
 p_area_subset + geom_point(data = name_area %>% 
                              dplyr::filter(common_name %in% dup_species$common_name), 
-           aes(x = common_name, y = maxAge, colour = area, size = countAge)) +
+           aes(x = common_name, y = maxAge, colour = area)) +
+  labs(x = "Common Name",
+       y = "Maximum Age") +
+  scale_colour_manual(values = c("CA" = "#CA0020",
+                                 "OR" = "#F4A582",
+                                 "WA" = "#e9c46a",
+                                 "Canada" = "#92C5DE",
+                                 "AK" = "#0571B0"),
+                      breaks = c("AK", "Canada", "WA", "OR", "CA"))
+```
+
+When individual areas are included in the range (as above) we see more detailed patterns. Here, a few species have latitudinal patterns where older fish are sampled in more northerly regions, including pacific ocean perch, quillback rockfish, and yelloweye rockfish. Other species have latitudinal patterns that are opposite, and include sablefish and shortspine thornyhead.
+
+When the sampling size for each area is added to the figure (below using the size of the colored point to reflect the square of the number of samples) we see that a lack of samples in some areas are likely contributing to the large range in longevity estimates. The largest sample sizes for each species tend to produce the largest maximum age. There are a few exceptions, but this is generally true, and makes logical sense because there are more opportunities to sample an old fish with more samples. 
+
+
+```{r, echo = FALSE}
+
+##-------------------------------------------##
+#Subsetting to species in multiple areas with adjusted relative size - shown
+##-------------------------------------------##
+
+p_area_subset + geom_point(data = name_area %>% 
+                             dplyr::filter(common_name %in% dup_species$common_name), 
+           aes(x = common_name, y = maxAge, colour = area, size = sqrt(countAge))) +
   labs(x = "Common Name",
        y = "Maximum Age") +
   scale_colour_manual(values = c("CA" = "#CA0020",
@@ -420,6 +457,11 @@ p_area_subset + geom_point(data = name_area %>%
                                  "Canada" = "#92C5DE",
                                  "AK" = "#0571B0"),
                       breaks = c("AK", "Canada", "WA", "OR", "CA")) +
+  scale_size_continuous(breaks = sqrt(c(100, 500, 2000, 5000, 64000)),
+                        labels = c("0-100", "100-500", "500-2000","2000-5000","5000+"), 
+                        range = c(1,8)) +
+  guides(size = guide_legend(position = "right"), 
+         colour = guide_legend(position = "left")) +
   theme(axis.text.x = element_text(
     angle = 90,
     hjust = 1,
@@ -430,6 +472,3 @@ ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), widt
 ```
 
 
-Looking at the range of maximum ages between areas, subsetted to species occuring in multiple areas, reveals some patterns. First the range varies by species. A total of `r sum(name_area_range$diff > 40)` species have a range greater than 40, and `r sum(name_area_range$diff > 25)` species have a range greater than 25. The majority of species have a small range, but many of these are species that do not occur over multiple areas, and therefore have a range of zero. Of the `r temp = name_area_range %>% dplyr::filter(common_name %in% dup_species$common_name)` `r nrow(temp)` species that occur in multiple areas, `r sum(temp$diff < 10)` have a range of less than 10. Second, a few species have latitudinal patterns where older fish are sampled in more northerly regions. These species include pacific oceanp perch, quillback rockfish, and yelloweye rockfish. Other species have latitudinal patterns that are opposite, and include sablefish and shortspine thornyhead. 
-
-Looking at the individual data for species with the greatest range indicates that a lack of samples in some areas may be contributing to the large range in longevity estimates. 
