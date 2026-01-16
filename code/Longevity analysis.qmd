@@ -472,3 +472,22 @@ ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), widt
 ```
 
 
+```{r, echo = FALSE}
+
+##-------------------------------------------##
+#Add species specific plots of length and age - Not shown
+##-------------------------------------------##
+
+library(purrr)
+
+dir.create(here("data", "AgeLengthPlots"))
+source(here("code", "plot_lengthAge.R"))
+
+temp <- data_age %>% dplyr::filter(common_name %in% dup_species$common_name)
+temp[grep("rougheye", temp$common_name),"common_name"] <- "rougheye-blackspotted rockfish"
+
+map(sort(unique(temp$common_name)), 
+    ~plot_lengthAge(., data_age, here("data", "AgeLengthPlots", paste(., ".png"))))
+
+```
+
