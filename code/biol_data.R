@@ -48,6 +48,23 @@ afsc <- afsc %>%
   )
 
 
+#The following species do not having matching scientific names in nwfsc_combo
+#and species. 
+# [1] "rougheye and blackspotted rockfish"
+# [2] "rock sole unident."                
+# [3] "sandpaper skate"                   
+# [4] "calico rockfish"                   
+# [5] "rockfish unident."                 
+# [6] "Sunset rockfish"                   
+# [7] "vermilion and sunset rockfish"     
+# [8] "hybrid tanner crab"                
+# [9] "vermilion and canary rockfish"     
+# [10] "blue / deacon rockfish"            
+# [11] "fish unident." 
+#Set these species' scientific names to match those in species
+source(here("code", "modify_combo_complex_names.R"))
+nwfsc_combo <- modify_combo_complex_names(nwfsc_combo)
+
 nwfsc_combo <- nwfsc_combo %>%
   mutate(Trawl_id = as.double(Trawl_id)) %>%
   semi_join(haul, by = c("Trawl_id" = "event_id")) %>%
@@ -133,6 +150,13 @@ biol_data <- bind_rows(afsc, nwfsc_combo, nwfsc_slope)
 #biological data from shared google drive
 nwfsc_tri <- readRDS("data/nwfsc_triennial_age_and_length.rds")
 nwfsc_triCA <- readRDS("data/nwfsc_triennialcanada_age_and_length.rds")
+
+#The following species do not having matching scientific names in nwfsc_combo
+#and species. 
+# [1] "rougheye and blackspotted rockfish"
+# [2] "rock sole unident."                
+#Set these species' scientific names to match those in species
+nwfsc_triCA <- modify_tri_complex_names(nwfsc_triCA)
 
 #Tri data from Canada are not in the haul database. 
 #For bio data this isn't a problem so remove the linkage with haul
