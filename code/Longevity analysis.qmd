@@ -28,7 +28,7 @@ library(dplyr)
 data <- readRDS(here("data", "biol_data_ALL.rds"))
 
 #Combine rougheye rockfish and rougheye/blackspotted rockfish complex
-data[grepl("rougheye", data$common_name), "common_name"] <- "rougheye/blackspotted rockfish"
+data[grepl("rougheye", data$common_name), "common_name"] <- "rougheye-blackspotted rockfish"
 
 # #Summarize by name and survey, getting maxAge within each as well as count
 # #Gives errors for combinations with no ages
@@ -476,20 +476,26 @@ ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), widt
 
 ##-------------------------------------------##
 #Add species specific plots of length and age - Not shown
+#Add species specific plots of age over time - Not shown
 ##-------------------------------------------##
 
 library(purrr)
 
-dir.create(here("data", "AgeLengthPlots"))
 source(here("code", "plot_lengthAge.R"))
+source(here("code", "plot_yearAge.R"))
+
 
 #Split the US surveys into states
 temp <- data_age %>% dplyr::filter(common_name %in% dup_species$common_name) %>%
   dplyr::mutate(survey_id2 = ifelse(survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial"), area, survey_id))
-temp[grep("rougheye", temp$common_name),"common_name"] <- "rougheye-blackspotted rockfish"
 
+dir.create(here("data", "AgeLengthPlots"))
 map(sort(unique(temp$common_name)), 
     ~plot_lengthAge(., temp, "survey_id2", here("data", "AgeLengthPlots", paste(., ".png"))))
+
+dir.create(here("data", "AgeYearPlots"))
+map(sort(unique(temp$common_name)), 
+    ~plot_yearAge(., temp, "area", here("data", "AgeYearPlots", paste(., ".png"))))
 
 ```
 

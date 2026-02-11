@@ -12,7 +12,8 @@ library(here)
 
 # pull these data from Nityamm's repo (see the pull request for the link)
 species <- readRDS("data/species_all.rds")
-haul <- readRDS("data/haul_data.rds")
+haul <- readRDS("data/haul_data.rds") %>%
+  dplyr::mutate(year = lubridate::year(date))
 species$common_name <- gsub('"', "", species$common_name) #remove the double quotes in common names
 
 # biological data from shared google drive
@@ -23,9 +24,10 @@ nwfsc_slope <- readRDS("data/nwfsc_nwfscslope_age_and_length.rds")
 afsc <- afsc %>%
   semi_join(haul, by = "event_id") %>%
   semi_join(species, by = c("worms" = "species_id")) %>%
-  left_join(haul %>% select(survey_id, event_id, lat_end, lon_end), by = "event_id") %>%
+  left_join(haul %>% select(survey_id, event_id, lat_end, lon_end, year), by = "event_id") %>%
   transmute(
     event_id,
+    year,
     survey_id,
     species_id = worms,
     length_cm = length_mm / 10,
@@ -61,6 +63,7 @@ nwfsc_combo <- nwfsc_combo %>%
   left_join(haul %>% select(survey_id, event_id), by = c("Trawl_id" = "event_id")) %>%
   transmute(
     event_id = Trawl_id,
+    year = Year,
     survey_id,
     weight_kg = Weight_kg,
     age = Age_years,
@@ -95,6 +98,7 @@ nwfsc_slope <- nwfsc_slope %>%
   left_join(haul %>% select(survey_id, event_id), c("Trawl_id" = "event_id")) %>%
   transmute(
     event_id = Trawl_id,
+    year = Year,
     survey_id,
     weight_kg = Weight_kg,
     age = Age_years,
@@ -146,6 +150,7 @@ nwfsc_triCA <- nwfsc_triCA %>%
   ) %>%
   transmute(
     event_id = Trawl_id,
+    year = Year,
     survey_id = "Triennial Canada",
     weight_kg = Weight_kg,
     age = Age,
@@ -212,6 +217,7 @@ nwfsc_tri_all <- nwfsc_tri_length %>%
   ) %>%
   transmute(
     event_id = Trawl_id,
+    year = Year,
     survey_id = "Triennial",
     weight_kg = Weight_kg,
     age = Age,
@@ -270,6 +276,7 @@ pbs_trawl <- pbs_trawl %>%
   ) %>%
   transmute(
     event_id = fishing_event_id,
+    year,
     survey_id = survey_abbrev,
     species_id,
     length_cm = length, 

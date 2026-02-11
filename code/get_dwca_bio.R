@@ -9,7 +9,8 @@ get_dwca_bio <- function(dwca){
   #Occurence: gives species present
   
   temp_event <- dwca$data$event.txt %>%
-    select(id, eventID, datasetName, decimalLatitude, decimalLongitude)
+    dplyr::mutate(year = lubridate::year(eventDate)) %>%
+    select(id, eventID, year, datasetName, decimalLatitude, decimalLongitude)
   
   if(nrow(temp_event) != sum(temp_event$id == temp_event$eventID)){
     warning("Event id does not equal id. Check event data")
@@ -42,6 +43,7 @@ get_dwca_bio <- function(dwca){
   data <- temp_data %>% 
     transmute(
       event_id = eventID,
+      year,
       survey_id = case_when(
         grepl("Outside", datasetName) ~ "HBLL OUT",
         grepl("Inside", datasetName) ~ "HBLL INS",
