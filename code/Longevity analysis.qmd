@@ -27,8 +27,18 @@ library(dplyr)
 
 data <- readRDS(here("data", "biol_data_ALL.rds"))
 
-#Combine rougheye rockfish and rougheye/blackspotted rockfish complex
-data[grepl("rougheye", data$common_name), "common_name"] <- "rougheye-blackspotted rockfish"
+#Combine common names for complexes and other similar names for the same species
+# 1. Combine rougheye rockfish and blackspotted rockfish with versions of rougheye/blackspotted rockfish complex 
+data[grepl("rougheye|blackspotted", data$common_name), "common_name"] <- "rougheye-blackspotted rockfish"
+# 2. Combine the three versions of spiny dogfish
+data[grepl("spiny dog", data$common_name), "common_name"] <- "pacific spiny dogfish"
+# 3. Combine various versions of vermilion and sunset rockfishes with complex
+data[grepl("vermilion|sunset", data$common_name), "common_name"] <- "vermilion-sunset rockfish"
+# 4. Combine the two types of unid rock sole, though dont combine northern and southern
+# rock sole with these
+data[grepl("rock sole un", data$common_name), "common_name"] <- "rock sole unid."
+# 5. Combine blue rockfish and deacon rockfish with complex
+data[grepl("blue|deacon", data$common_name) & !grepl("blue shark", data$common_name), "common_name"] <- "blue-deacon rockfish"
 
 # #Summarize by name and survey, getting maxAge within each as well as count
 # #Gives errors for combinations with no ages
@@ -92,7 +102,7 @@ name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
 
 ```
 
-Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code avaialble in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information. The surveys with age data available include:
+Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code available in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information. The surveys with age data available include:
 
 1. Aleutian Islands Bottom Trawl Survey (AFSC AI)
 1. Gulf of Alaska Bottom Trawl Survey (AFSC GOA)
