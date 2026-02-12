@@ -1,7 +1,7 @@
 #Function to modify scientific names for complexes in the NWFSC combo survey data
 #Input is the nwfsc_combo data set
-#Output is a modified data set so scientific names
-#match what is in the species data set
+#Output is a modified data set so scientific names match what is in the 
+#species data set so that these data aren't removed when use semi_join
 
 modify_combo_complex_names <- function(data){
   
@@ -18,7 +18,6 @@ modify_combo_complex_names <- function(data){
   # [9] "vermilion and canary rockfish"     
   # [10] "blue / deacon rockfish"            
   # [11] "fish unident." 
-  
   
   #Update "rougheye and blackspotted rockfish"
   rows <- grep("rougheye", data$Common_name, ignore.case = TRUE)
@@ -76,6 +75,16 @@ modify_tri_complex_names <- function(data){
   # [1] "rock sole unident."                
   # [2] "rougheye and blackspotted rockfish"
   
+  #and based on the tri length data set
+  # [1] "sandpaper skate"                   
+  # [2] "rougheye and blackspotted rockfish"
+  # [3] "salmon unident."                   
+  # [4] "calico rockfish"                   
+  # [5] "rockfish unident."                 
+  # [6] "rock sole unident." 
+  
+  #and based on the tri age data set
+  # [1] "rougheye and blackspotted rockfish"
   
   #Update "rougheye and blackspotted rockfish"
   rows <- grep("rougheye", data$Common_name, ignore.case = TRUE)
@@ -84,6 +93,24 @@ modify_tri_complex_names <- function(data){
   "rock sole unident."
   rows <- grep("rock sole", data$Common_name, ignore.case = TRUE)
   data[rows, "Scientific_name"] <- "Lepidopsetta bilineata" #was Lepidopsetta
+  
+  # For non-Canada triennial data, the remaining species are ignored for the same
+  # reasons as are provided for the combo survey data in modify_combo_complex_names
+  
+  return(data)
+  
+}
+
+
+modify_pbs_complex_names <- function(data){
+  
+  #Based on the pbs trawl survey data set
+  
+  # [1] "sebastes aleutianus/melanostictus complex"               
+  
+  #Update "sebastes aleutianus/melanostictus complex"
+  rows <- grep("aleutianus", data$species_science_name, ignore.case = TRUE)
+  data[rows, "species_science_name"] <- "SEBASTES ALEUTIANUS" #was SEBASTES ALEUTIANUS/MELANOSTICTUS COMPLEX
   
   return(data)
   

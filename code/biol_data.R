@@ -60,7 +60,8 @@ afsc <- afsc %>%
 # [9] "vermilion and canary rockfish"     
 # [10] "blue / deacon rockfish"            
 # [11] "fish unident." 
-#Set these species' scientific names to match those in species
+#Set some species scientific names to match those in species so they aren't removed. 
+#See details in modify_complex_names.R
 source(here("code", "modify_complex_names.R"))
 nwfsc_combo <- modify_combo_complex_names(nwfsc_combo)
 
@@ -150,11 +151,11 @@ biol_data <- bind_rows(afsc, nwfsc_combo, nwfsc_slope)
 nwfsc_tri <- readRDS("data/nwfsc_triennial_age_and_length.rds")
 nwfsc_triCA <- readRDS("data/nwfsc_triennialcanada_age_and_length.rds")
 
-#The following species do not having matching scientific names in nwfsc_combo
+#The following species do not having matching scientific names in nwfsc_triCanada
 #and species. 
 # [1] "rougheye and blackspotted rockfish"
 # [2] "rock sole unident."                
-#Set these species' scientific names to match those in species
+#Set these species' scientific names to match those in species. See details in modify_complex_names.R
 nwfsc_triCA <- modify_tri_complex_names(nwfsc_triCA)
 
 #Tri data from Canada are not in the haul database. 
@@ -193,6 +194,17 @@ nwfsc_triCA <- nwfsc_triCA %>%
     !if_all(c(length_cm, weight_kg, sex, age), is.na)
   )
 
+#The following species do not having matching scientific names in nwfsc_tri length
+#and species. 
+# [1] "sandpaper skate"                   
+# [2] "rougheye and blackspotted rockfish"
+# [3] "salmon unident."                   
+# [4] "calico rockfish"                   
+# [5] "rockfish unident."                 
+# [6] "rock sole unident."               
+#Set some species scientific names to match those in species. See details in modify_complex_names.R
+nwfsc_tri$length_data <- modify_tri_complex_names(nwfsc_tri$length_data)
+
 #Triennial data is split and at times has no unique identifier between
 #the two datasets (lengths and ages). 
 #For records with no clear identifier (same Trawl_id, species, sex, length) just
@@ -214,6 +226,12 @@ nwfsc_tri_length <- nwfsc_tri$length_data %>%
   group_by(Trawl_id, Common_name, Sex, Length_cm) %>%
   mutate(Counter = row_number()) %>%
   ungroup() 
+
+#The following species do not having matching scientific names in nwfsc_tri age
+#and species. 
+# [1] "rougheye and blackspotted rockfish"
+#Set scientific names to match those in species. See details in modify_complex_names.R
+nwfsc_tri$age_data <- modify_tri_complex_names(nwfsc_tri$age_data)
 
 nwfsc_tri_age <- nwfsc_tri$age_data %>%
   mutate(Trawl_id = as.double(Trawl_id)) %>%
@@ -283,6 +301,13 @@ table(rowSums(is.na(pbs_trawl[,grep("length", colnames(pbs_trawl))])))
 #Then use total length when fork is not available.
 pbs_trawl <- pbs_trawl %>% 
   dplyr::mutate(length = ifelse(!is.na(fork_length), fork_length, total_length))
+
+#The following species do not having matching scientific names in pbs_trawl
+#and species. 
+# [1] "sebastes aleutianus/melanostictus complex"
+#Set scientific names to match those in species. See details in modify_complex_names.R
+pbs_trawl <- modify_pbs_complex_names(pbs_trawl)
+
 
 pbs_trawl <- pbs_trawl %>%
   mutate(scientific_name = tolower(species_science_name)) %>%
