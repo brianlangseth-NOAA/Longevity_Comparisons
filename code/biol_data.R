@@ -47,7 +47,6 @@ afsc <- afsc %>%
     !if_all(c(length_cm, weight_kg, sex, age), is.na)
   )
 
-
 #The following species do not having matching scientific names in nwfsc_combo
 #and species. 
 # [1] "rougheye and blackspotted rockfish"
@@ -62,7 +61,7 @@ afsc <- afsc %>%
 # [10] "blue / deacon rockfish"            
 # [11] "fish unident." 
 #Set these species' scientific names to match those in species
-source(here("code", "modify_combo_complex_names.R"))
+source(here("code", "modify_complex_names.R"))
 nwfsc_combo <- modify_combo_complex_names(nwfsc_combo)
 
 nwfsc_combo <- nwfsc_combo %>%
