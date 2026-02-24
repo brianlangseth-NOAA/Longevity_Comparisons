@@ -100,6 +100,23 @@ name_area_range <- name_area %>%
 
 name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
 
+#Repeat but at the 99th quantile to assess outliers
+name_area_999 <- data_age %>% 
+  dplyr::group_by(common_name, area) %>%
+  dplyr::summarize(max999Age = quantile(age, probs = c(0.999), na.rm = TRUE),
+            countAge = sum(!is.na(age)),
+            .groups = "keep")
+name_area_999$species_N <- as.numeric(as.factor(name_area$common_name))
+
+name_area_999_range <- name_area_999 %>%
+  filter(is.finite(max999Age)) %>%
+  group_by(common_name) %>%
+  summarize(rangeMax = max(max999Age, na.rm = TRUE),
+            rangeMin = min(max999Age, na.rm = TRUE))
+
+name_area_999_range$diff = name_area_999_range$rangeMax - name_area_999_range$rangeMin
+
+
 ```
 
 Age data were acquired from `r length(unique(data$survey_id)) - 1` fishery-independent surveys conducted along the U.S West Coast, Canada, and Alaska using code available in the `surveyjoin-db` package. A total of `r nrow(data)` records across `r length(unique(data$common_name))` species were available, and of these, `r nrow(data_age)` samples across `r length(unique(data_age$common_name))` species included age information. The surveys with age data available include:
@@ -257,7 +274,7 @@ map <- ggplot2::ggplot() +
   guides(color = guide_legend(ncol = 3)) 
 
 map
-ggsave(here("figures", "Map of surveys_fancy.png"), width = 6, height = 6, units = "in")
+# ggsave(here("figures", "Map of surveys_fancy.png"), width = 6, height = 6, units = "in")
 
 ```
 
@@ -321,7 +338,7 @@ p_survey <- ggplot(name_surv_range, aes(x = common_name)) +
     vjust = 0
     ))
 p_survey
-ggsave(here("figures", "Range over surveys.png"), width = 8.5, height = 4, units = "in")
+# ggsave(here("figures", "Range over surveys.png"), width = 8.5, height = 4, units = "in")
 ```
 
 ```{r, include = FALSE}
@@ -332,7 +349,7 @@ ggsave(here("figures", "Range over surveys.png"), width = 8.5, height = 4, units
 
 p_survey + geom_point(data = name_surv, 
                aes(x = common_name, y = maxAge, colour = survey_id, size = countAge))
-ggsave(here("figures", "Range over surveys_with survey_relative size.png"), width = 8.5, height = 4, units = "in")
+# ggsave(here("figures", "Range over surveys_with survey_relative size.png"), width = 8.5, height = 4, units = "in")
 ```
 
 When surveys within an area (either Alaska or Canada) are aggregated, the range for the minimum compresses, reflecting a smaller range across areas. For species in surveys that are already aggregated across Washington, Oregon, and California, dissagregating by area expands the range.
@@ -355,7 +372,7 @@ p_area <- ggplot(name_area_range, aes(x = common_name)) +
     vjust = 0
     ))
 p_area
-ggsave(here("figures", "Range over areas.png"), width = 8.5, height = 4, units = "in")
+# ggsave(here("figures", "Range over areas.png"), width = 8.5, height = 4, units = "in")
 
 ```
 
@@ -400,11 +417,15 @@ p_area + geom_point(data = name_area,
     hjust = 1,
     vjust = 0
     ))
-ggsave(here("figures", "Range over areas_with survey_relative.png"), width = 8.5, height = 4, units = "in")
+# ggsave(here("figures", "Range over areas_with survey_relative.png"), width = 8.5, height = 4, units = "in")
 
 ```
 
 {{< pagebreak >}}
+
+```{r, echo = FALSE}
+dup_species <- unique(name_area[duplicated(name_area$common_name), "common_name"])
+```
 
 If we look at only species that are caught in more than one area. We have something a little easier to look at, which provides a working starting point for the range of longevity estimates across areas. Based on this figure of the ranges of maximum ages, we see that the range varies by species. Of the `r temp = name_area_range %>% dplyr::filter(common_name %in% dup_species$common_name)` `r nrow(temp)` species that occur in multiple areas, a total of `r sum(name_area_range$diff > 40)` species have a range greater than 40, a total of `r sum(name_area_range$diff > 25)` species have a range greater than 25, and a total of `r sum(temp$diff < 10)` have a range of less than 10. 
 
@@ -445,6 +466,31 @@ p_area_subset + geom_point(data = name_area %>%
                       breaks = c("AK", "Canada", "WA", "OR", "CA"))
 ```
 
+```{r, echo = FALSE}
+
+##-------------------------------------------##
+#Set to 99.9th quantile - Not shown
+##-------------------------------------------##
+
+#To keep on same scale as the full plot, use that data but for specific line mappings, use the 99.9th quantile data
+p_area_subset999 <- ggplot(
+  name_area_range %>% dplyr::filter(common_name %in% dup_species$common_name), 
+  aes(x = common_name)) +
+  geom_linerange(aes(ymin = rangeMin, ymax = rangeMax), alpha = 0) +
+  geom_linerange(aes(ymin = rangeMin, ymax = rangeMax), data = name_area_999_range %>% dplyr::filter(common_name %in% dup_species$common_name)) +
+  geom_point(aes(y = rangeMin), data = name_area_999_range %>% dplyr::filter(common_name %in% dup_species$common_name)) +
+  geom_point(aes(y = rangeMax), data = name_area_999_range %>% dplyr::filter(common_name %in% dup_species$common_name)) +
+  labs(x = "Common Name",
+       y = "Maximum Age") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0
+    ))
+p_area_subset999
+ggsave(here("figures", "Range over areas_subset_99.9quantile.png"), width = 8.5, height = 4, units = "in")
+```
+
 When individual areas are included in the range (as above) we see more detailed patterns. Here, a few species have latitudinal patterns where older fish are sampled in more northerly regions, including pacific ocean perch, quillback rockfish, and yelloweye rockfish. Other species have latitudinal patterns that are opposite, and include sablefish and shortspine thornyhead.
 
 When the sampling size for each area is added to the figure (below using the size of the colored point to reflect the square of the number of samples) we see that a lack of samples in some areas are likely contributing to the large range in longevity estimates. The largest sample sizes for each species tend to produce the largest maximum age. There are a few exceptions, but this is generally true, and makes logical sense because there are more opportunities to sample an old fish with more samples. 
@@ -470,13 +516,14 @@ p_area_subset + geom_point(data = name_area %>%
   scale_size_continuous(breaks = sqrt(c(100, 500, 2000, 5000, 64000)),
                         labels = c("0-100", "100-500", "500-2000","2000-5000","5000+"), 
                         range = c(1,8)) +
-  guides(size = guide_legend(position = "right"), 
-         colour = guide_legend(position = "left")) +
+  guides(size = guide_legend(position = "right")) +#,
+         # colour = guide_legend(position = "right")) +
   theme(axis.text.x = element_text(
     angle = 90,
     hjust = 1,
     vjust = 0
-    ))
+    ),
+    legend.position = c(1.1,-0.6))
 ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), width = 8.5, height = 4, units = "in")
 
 ```
@@ -500,11 +547,11 @@ temp <- data_age %>% dplyr::filter(common_name %in% dup_species$common_name) %>%
   dplyr::mutate(survey_id2 = ifelse(survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial"), area, survey_id))
 
 dir.create(here("data", "AgeLengthPlots"))
-map(sort(unique(temp$common_name)), 
+map(sort(unique(temp$common_name)),
     ~plot_lengthAge(., temp, "survey_id2", here("data", "AgeLengthPlots", paste(., ".png"))))
 
 dir.create(here("data", "AgeYearPlots"))
-map(sort(unique(temp$common_name)), 
+map(sort(unique(temp$common_name)),
     ~plot_yearAge(., temp, "area", here("data", "AgeYearPlots", paste(., ".png"))))
 
 ```
