@@ -99,6 +99,7 @@ name_area_range <- name_area %>%
             rangeMin = min(maxAge, na.rm = TRUE))
 
 name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
+name_area_range$diff_p = name_area_range$diff/name_area_range$rangeMax
 
 #Repeat but at the 99th quantile to assess outliers
 name_area_999 <- data_age %>% 
@@ -115,7 +116,7 @@ name_area_999_range <- name_area_999 %>%
             rangeMin = min(max999Age, na.rm = TRUE))
 
 name_area_999_range$diff = name_area_999_range$rangeMax - name_area_999_range$rangeMin
-
+name_area_999_range$diff_p = name_area_999_range$diff/name_area_999_range$rangeMax
 
 ```
 
