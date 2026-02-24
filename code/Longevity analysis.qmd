@@ -528,6 +528,40 @@ ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), widt
 
 ```
 
+```{r, echo = FALSE}
+
+##-------------------------------------------##
+#Subsetting to species in multiple areas with adjusted relative size for largest species - NOT shown
+##-------------------------------------------##
+
+filter <- name_area_range %>% dplyr::filter(diff >= 30)
+p_area_subset + geom_point(data = name_area %>% 
+                             dplyr::filter(common_name %in% filter$common_name),
+                           aes(x = common_name, y = maxAge, colour = area, size = sqrt(countAge))) +
+  labs(x = "Common Name",
+       y = "Maximum Age") +
+  scale_colour_manual(values = c("CA" = "#CA0020",
+                                 "OR" = "#F4A582",
+                                 "WA" = "#e9c46a",
+                                 "Canada" = "#92C5DE",
+                                 "AK" = "#0571B0"),
+                      breaks = c("AK", "Canada", "WA", "OR", "CA")) +
+  scale_size_continuous(breaks = sqrt(c(100, 500, 2000, 5000, 64000)),
+                        labels = c("0-100", "100-500", "500-2000","2000-5000","5000+"), 
+                        range = c(1,8)) +
+  guides(size = guide_legend(position = "right")) +#,
+  # colour = guide_legend(position = "right")) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0
+  ),
+  legend.position = c(1.1,-0.6))
+ggsave(here("figures", "Range over areas_subset_with survey_relative_BIGGEST.png"), width = 8.5, height = 4, units = "in")
+
+```
+
+
 
 ```{r, echo = FALSE}
 
