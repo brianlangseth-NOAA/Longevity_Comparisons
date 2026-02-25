@@ -452,7 +452,7 @@ p_area_subset <- ggplot(
     vjust = 0
     ))
 p_area_subset
-ggsave(here("figures", "Range over areas_subset.png"), width = 8.5, height = 4, units = "in")
+#ggsave(here("figures", "Range over areas_subset.png"), width = 8.5, height = 4, units = "in")
 
 p_area_subset + geom_point(data = name_area %>% 
                              dplyr::filter(common_name %in% dup_species$common_name), 
@@ -489,7 +489,7 @@ p_area_subset999 <- ggplot(
     vjust = 0
     ))
 p_area_subset999
-ggsave(here("figures", "Range over areas_subset_99.9quantile.png"), width = 8.5, height = 4, units = "in")
+#ggsave(here("figures", "Range over areas_subset_99.9quantile.png"), width = 8.5, height = 4, units = "in")
 ```
 
 When individual areas are included in the range (as above) we see more detailed patterns. Here, a few species have latitudinal patterns where older fish are sampled in more northerly regions, including pacific ocean perch, quillback rockfish, and yelloweye rockfish. Other species have latitudinal patterns that are opposite, and include sablefish and shortspine thornyhead.
@@ -525,7 +525,7 @@ p_area_subset + geom_point(data = name_area %>%
     vjust = 0
     ),
     legend.position = c(1.1,-0.6))
-ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), width = 8.5, height = 4, units = "in")
+#ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), width = 8.5, height = 4, units = "in")
 
 ```
 
@@ -535,7 +535,7 @@ ggsave(here("figures", "Range over areas_subset_with survey_relative.png"), widt
 #Subsetting to species in multiple areas with adjusted relative size for largest species - NOT shown
 ##-------------------------------------------##
 
-filter <- name_area_range %>% dplyr::filter(diff >= 30)
+filter <- name_area_range %>% dplyr::filter(diff_p >= 0.4)
 p_area_subset + geom_point(data = name_area %>% 
                              dplyr::filter(common_name %in% filter$common_name),
                            aes(x = common_name, y = maxAge, colour = area, size = sqrt(countAge))) +
@@ -558,7 +558,7 @@ p_area_subset + geom_point(data = name_area %>%
     vjust = 0
   ),
   legend.position = c(1.1,-0.6))
-ggsave(here("figures", "Range over areas_subset_with survey_relative_BIGGEST.png"), width = 8.5, height = 4, units = "in")
+#ggsave(here("figures", "Range over areas_subset_with survey_relative_BIGGEST.png"), width = 8.5, height = 4, units = "in")
 
 ```
 
