@@ -101,7 +101,7 @@ name_area_range <- name_area %>%
 name_area_range$diff = name_area_range$rangeMax - name_area_range$rangeMin
 name_area_range$diff_p = name_area_range$diff/name_area_range$rangeMax
 
-#Repeat but at the 99th quantile to assess outliers
+#Repeat but at the 99th quantile to assess outliers (default type (7) uses predictions, consider using a function that rounds down to next closest real data point)
 name_area_999 <- data_age %>% 
   dplyr::group_by(common_name, area) %>%
   dplyr::summarize(max999Age = quantile(age, probs = c(0.999), na.rm = TRUE),
