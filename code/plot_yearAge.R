@@ -20,9 +20,15 @@ plot_yearAge <- function(spec, data, cat, output = NULL){
   #Match x axis between the two plots
   common_limits_year <- c(min(temp$year)-1, max(temp$year)+1)
   
-  p1 <- ggplot(temp, aes(x = year, y = age, fill = .data[[cat]])) + 
-    geom_bar(position="stack", stat="identity") +
+  p1 <- ggplot(temp, aes(x = year, fill = .data[[cat]])) + 
+    geom_bar(position="stack", stat="count") +
     scale_x_continuous(limits = common_limits_year)  +
+    scale_fill_manual(values = c("CA" = "#CA0020",
+                                   "OR" = "#F4A582",
+                                   "WA" = "#e9c46a",
+                                   "Canada" = "#92C5DE",
+                                   "AK" = "#0571B0"),
+                        breaks = c("AK", "Canada", "WA", "OR", "CA")) +
     labs(title = spec,
          x = "",
          y = "Number of Ages")
@@ -32,6 +38,12 @@ plot_yearAge <- function(spec, data, cat, output = NULL){
     geom_point(data = max_temp, 
                mapping = aes(x = yearmax, y = max, colour = .data[[cat]]), size = 3) +
     scale_x_continuous(limits = common_limits_year) +
+    scale_color_manual(values = c("CA" = "#CA0020",
+                                 "OR" = "#F4A582",
+                                 "WA" = "#e9c46a",
+                                 "Canada" = "#92C5DE",
+                                 "AK" = "#0571B0"),
+                      breaks = c("AK", "Canada", "WA", "OR", "CA")) +
     labs(x = "Year",
          y = "Age (years)")
   

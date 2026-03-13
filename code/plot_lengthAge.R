@@ -16,6 +16,12 @@ plot_lengthAge <- function(spec, data, cat, output = NULL){
   
   ggplot(temp, aes(x = age, y = length_cm, colour = .data[[cat]])) + 
     geom_point(alpha = 0.3, size = 1) +
+    scale_color_manual(values = c("CA" = "#CA0020",
+                                 "OR" = "#F4A582",
+                                 "WA" = "#e9c46a",
+                                 "Canada" = "#92C5DE",
+                                 "AK" = "#0571B0"),
+                      breaks = c("AK", "Canada", "WA", "OR", "CA")) +
     geom_segment(data = max_temp, mapping = aes(x = max, xend = max, 
                                                 y = 0, yend = 5,
                                                 colour = .data[[cat]]), lwd=1) +

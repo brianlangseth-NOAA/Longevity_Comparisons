@@ -611,7 +611,7 @@ temp <- data_age %>% dplyr::filter(common_name %in% dup_species$common_name) %>%
 
 dir.create(here("data", "AgeLengthPlots"))
 map(sort(unique(temp$common_name)),
-    ~plot_lengthAge(., temp, "survey_id2", here("data", "AgeLengthPlots", paste(., ".png"))))
+    ~plot_lengthAge(., temp, "area", here("data", "AgeLengthPlots", paste(., ".png"))))
 
 dir.create(here("data", "AgeYearPlots"))
 map(sort(unique(temp$common_name)),
