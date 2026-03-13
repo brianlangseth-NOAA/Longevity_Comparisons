@@ -60,6 +60,8 @@ data/
 *.gdoc
 *.zip
 *.pdf
+*.gslides
+*.pptx
 
 # Windows files
 *Thumbs.db
