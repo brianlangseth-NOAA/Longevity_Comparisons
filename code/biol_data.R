@@ -352,11 +352,21 @@ pbs_trawl <- pbs_trawl %>%
 library(finch)
 source(here("code", "get_dwca_bio.R"))
 
-pbs_out <- dwca_read(here("data", "dwca-hbll-out-n-v3.0.zip"), read = TRUE) %>%
+pbs_out_n <- dwca_read(here("data", "dwca-hbll-out-n-v3.0.zip"), read = TRUE) %>%
   get_dwca_bio()
 
-pbs_in <- dwca_read(here("data", "dwca-hbll-in-n-v3.0.zip"), read = TRUE) %>%
+pbs_out_s <- dwca_read(here("data", "dwca-hbll-out_s-v3.0.zip"), read = TRUE) %>%
   get_dwca_bio()
 
-biol_data_all <- bind_rows(biol_data_all_US, pbs_trawl, pbs_out, pbs_in) 
-#saveRDS(biol_data_all, "data/biol_data_ALL.rds")
+pbs_in_n <- dwca_read(here("data", "dwca-hbll-in-n-v3.0.zip"), read = TRUE) %>%
+  get_dwca_bio()
+
+pbs_in_s <- dwca_read(here("data", "dwca-hbll-in-s-v3.0.zip"), read = TRUE) %>%
+  get_dwca_bio()
+
+hecate_multi <- dwca_read(here("data", "dwca-dfo_pacific_groundfish-hecate_strait_multispecies_assemblage_survey-v2.2.zip"), read = TRUE) %>%
+  get_dwca_bio()
+
+biol_data_all <- bind_rows(biol_data_all_US, pbs_trawl, pbs_out_n, pbs_out_s, pbs_in_n, pbs_in_s, hecate_multi) 
+#saveRDS(biol_data_all, "data/biol_data_ALL_new.rds")
+
