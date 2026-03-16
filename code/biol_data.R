@@ -368,6 +368,20 @@ pbs_in_s <- dwca_read(here("data", "dwca-hbll-in-s-v3.0.zip"), read = TRUE) %>%
 hecate_multi <- dwca_read(here("data", "dwca-dfo_pacific_groundfish-hecate_strait_multispecies_assemblage_survey-v2.2.zip"), read = TRUE) %>%
   get_dwca_bio()
 
-biol_data_all <- bind_rows(biol_data_all_US, pbs_trawl, pbs_out_n, pbs_out_s, pbs_in_n, pbs_in_s, hecate_multi) 
+biol_data_PBSextra <- bind_rows(pbs_out_n, pbs_out_s, pbs_in_n, pbs_in_s, hecate_multi) 
+
+
+##
+#Add sablefish trap survey
+#First need to download the csv files for inlet and offshore
+##
+
+source(here("code", "get_sable_trap.R"))
+
+sable_inlet <- get_sable_trap("Sablefish_Survey_Inlet_EN")
+
+sable_offshore <- get_sable_trap("Sablefish_Survey_StRS_EN")
+
+biol_data_all <- bind_rows(biol_data_all_US, pbs_trawl, biol_data_PBSextra, sable_inlet, sable_offshore) 
 #saveRDS(biol_data_all, "data/biol_data_ALL_new.rds")
 

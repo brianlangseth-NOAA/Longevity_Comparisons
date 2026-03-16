@@ -60,7 +60,7 @@ data_age <- data %>%
 data_age <- data_age %>%
   mutate(area = case_when(
       grepl("AFSC", survey_id) ~ "AK",
-      grepl("HBLL|SYN|Canada", survey_id) ~ "Canada",
+      grepl("HBLL|SYN|Canada|Trap", survey_id) ~ "Canada",
       survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial") &
         lat > 46.26 ~ "WA",
       survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial") &
