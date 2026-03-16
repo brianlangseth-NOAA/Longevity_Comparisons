@@ -47,6 +47,7 @@ get_dwca_bio <- function(dwca){
       survey_id = case_when(
         grepl("Outside", datasetName) ~ "HBLL OUT",
         grepl("Inside", datasetName) ~ "HBLL INS",
+        grepl("Multispecies", datasetName) ~ "HS Multi",
         is.na(datasetName) ~ "unknown"
       ),
       species_id,
@@ -56,6 +57,7 @@ get_dwca_bio <- function(dwca){
       sex = case_when(
         sex == "Male" ~ "male",
         sex == "Female" ~ "female",
+        sex == "Indeterminate" ~ "unknown",
         is.na(sex) ~ "unknown"
       ),
       common_name = tolower(vernacularName),

@@ -90,7 +90,8 @@ nwfsc_combo <- nwfsc_combo %>%
     sex = case_when(
       sex == c('M') ~ "male",
       sex == c('F') ~ "female",
-      sex == c('U') ~ "unknown"
+      sex == c('U') ~ "unknown",
+      is.na(sex) ~ "unknown"
     ),
     common_name = tolower(Common_name),
     lat = Latitude_dd,
@@ -346,7 +347,7 @@ pbs_trawl <- pbs_trawl %>%
 
 ##
 #Add the non-trawl PBS data
-#First need to download DwC-A files for inside and outside surveys
+#First need to download DwC-A files for inside and outside north and south surveys
 ##
 
 library(finch)
