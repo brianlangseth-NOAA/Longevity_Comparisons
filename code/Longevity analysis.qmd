@@ -25,7 +25,7 @@ library(dplyr)
 #Load data and process 
 ##-------------------------------------------##
 
-data <- readRDS(here("data", "biol_data_ALL.rds"))
+data <- readRDS(here("data", "biol_data_ALL_new.rds"))
 
 #Combine common names for complexes and other similar names for the same species
 # 1. Combine rougheye rockfish and blackspotted rockfish with versions of rougheye/blackspotted rockfish complex 
@@ -60,7 +60,7 @@ data_age <- data %>%
 data_age <- data_age %>%
   mutate(area = case_when(
       grepl("AFSC", survey_id) ~ "AK",
-      grepl("HBLL|SYN|Canada|Trap", survey_id) ~ "Canada",
+      grepl("HBLL|SYN|Canada|Trap|Multi", survey_id) ~ "Canada",
       survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial") &
         lat > 46.26 ~ "WA",
       survey_id %in% c("NWFSC Combo", "NWFSC Slope", "Triennial") &
@@ -163,12 +163,12 @@ locs[which(locs$lon > 0),"lon"] <- locs[which(locs$lon > 0), "lon"] * -1
 
 
 ggplot() +
-  geom_polygon(data = mapData, aes(x = long, y = lat, group = group), 
+  geom_polygon(data = mapData, aes(x = long, y = lat, group = group),
                fill = "black", color = "black") +
   coord_cartesian(xlim = c(-180, -110), ylim = c(30, 70)) +
   geom_point(data = locs, aes(x = lon, y = lat, color = survey_id), size = 1) +
-  guides(color = guide_legend(ncol = 3)) + 
-  theme_void() + 
+  guides(color = guide_legend(ncol = 3)) +
+  theme_void() +
   theme(legend.position = c(0.3,0.25))
 
 ```
@@ -399,7 +399,7 @@ p_area + geom_point(data = name_area,
     hjust = 1,
     vjust = 0
     ))
-ggsave(here("figures", "Range over areas_with survey.png"), width = 8.5, height = 4, units = "in")
+# ggsave(here("figures", "Range over areas_with survey.png"), width = 8.5, height = 4, units = "in")
 
 #Scale size to sqrt of the number of ages
 p_area + geom_point(data = name_area, 
