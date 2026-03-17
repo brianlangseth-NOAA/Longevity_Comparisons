@@ -1,7 +1,16 @@
 #Function to take a data file read in by finch and outputs 
 #a single flat file with necessary biological data
 
-get_dwca_bio <- function(dwca){
+#Note that for the multispecies bottomtrawl the id-occurrenceID 
+#combination in the measurement data sometimes does not align with 
+#the id-occurrenceID combination in the occurrence data. 
+#These instances have id's that end in 099. Need to use the id in 
+#the event data that ends in 099. 
+#
+#Add flag for when using multspecies bottomtrawl data
+
+
+get_dwca_bio <- function(dwca, mstrawl = FALSE){
   
   #Load datasets within the dwca structure. 
   #Event: gives location
@@ -39,6 +48,18 @@ get_dwca_bio <- function(dwca){
     mutate(length = as.numeric(`Length (fork length) of biological entity specified elsewhere`),
            weight = as.numeric(`Specimen weight of biological entitiy specified elsewhere`),
            age = as.numeric(`Specimen age of biological entity specified elsewhere`))
+
+  #Use id from the occurrence data that corresponds to the occurrenceID field
+  #in the measurement data to link to event information
+  if(mstrawl) {
+    temp_data <- temp_measure %>% select(!measurementUnit) %>%
+      left_join(temp_occur, by = c("occurrenceID")) %>%
+      left_join(temp_event, by = join_by("id.y" == "id", "eventID" == "eventID")) %>%
+      pivot_wider(names_from = measurementType, values_from = measurementValue) %>%
+      mutate(length = as.numeric(`Length (fork length) of biological entity specified elsewhere`),
+             weight = as.numeric(`Specimen weight of biological entitiy specified elsewhere`),
+             age = as.numeric(`Specimen age of biological entity specified elsewhere`))
+  }
   
   data <- temp_data %>% 
     transmute(

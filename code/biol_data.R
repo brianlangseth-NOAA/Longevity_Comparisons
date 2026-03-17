@@ -366,7 +366,7 @@ pbs_in_s <- dwca_read(here("data", "dwca-hbll-in-s-v3.0.zip"), read = TRUE) %>%
   get_dwca_bio()
 
 hecate_multi <- dwca_read(here("data", "dwca-dfo_pacific_groundfish-hecate_strait_multispecies_assemblage_survey-v2.2.zip"), read = TRUE) %>%
-  get_dwca_bio()
+  get_dwca_bio(mstrawl = TRUE)
 
 biol_data_PBSextra <- bind_rows(pbs_out_n, pbs_out_s, pbs_in_n, pbs_in_s, hecate_multi) 
 
