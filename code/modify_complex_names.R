@@ -101,6 +101,47 @@ modify_tri_complex_names <- function(data){
   
 }
 
+modify_afsc_slope_complex_names <- function(data){
+  
+  #Based on the afsc slope length survey data set
+  
+  # [1] "sandpaper skate"                   
+  # [2] "rougheye and blackspotted rockfish"
+  # [3] "Pacific lamprey"                   
+  # [4] "kelp snailfish"                    
+  # [5] "fish unident."                     
+  # [6] "blacksmelt unident."               
+  # [7] "rockfish unident." 
+  
+  #and based on the afsc slope age data set
+  # [1] "rougheye and blackspotted rockfish"
+  # [2] "sandpaper skate"   
+  
+  #Update "rougheye and blackspotted rockfish"
+  rows <- grep("rougheye", data$Common_name, ignore.case = TRUE)
+  data[rows, "Scientific_name"] <- "Sebastes aleutianus" #was Sebastes sp. (aleutianus / melanostictus)
+  
+  #Update "pacific lamprey"
+  rows <- grep("lamprey", data$Common_name, ignore.case = TRUE)
+  data[rows, "Scientific_name"] <- "Entosphenus tridentatus" #was Entosphenus tridentata
+  
+  # #Update "kelp snailfish"
+  # rows <- grep("kelp snailfish", data$Common_name, ignore.case = TRUE)
+  # data[rows, "Scientific_name"] 
+  # #There is no match in the species database. Keep as is. 
+  
+  # #Update "blacksmelt unident."
+  # rows <- grep("blacksmelt", data$Common_name, ignore.case = TRUE)
+  # table(data[rows, "Scientific_name"])
+  # # #No way to identify these so keep as is. 
+  
+  # For afsc slope data, the remaining species are ignored for the same
+  # reasons as are provided for the combo survey data in modify_combo_complex_names
+  
+  return(data)
+  
+}
+
 
 modify_pbs_complex_names <- function(data){
   

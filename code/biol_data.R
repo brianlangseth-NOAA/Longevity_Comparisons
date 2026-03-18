@@ -9,6 +9,8 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(here)
+# remotes::install_github("pfmc-assessments/nwfscSurvey")
+# library(nwfscSurvey)
 
 # pull these data from Nityamm's repo (see the pull request for the link)
 species <- readRDS("data/species_all.rds")
@@ -20,6 +22,12 @@ species$common_name <- gsub('"', "", species$common_name) #remove the double quo
 afsc <- readRDS("data/afsc-specimen.rds")
 nwfsc_combo <- readRDS("data/nwfsc_nwfsccombo_age_and_length.rds")
 nwfsc_slope <- readRDS("data/nwfsc_nwfscslope_age_and_length.rds")
+afsc_slope <- readRDS("data/nwfsc_afscslope_age_and_length.rds")
+
+# nwfsc_shelf <- nwfscSurvey::pull_bio(survey = "NWFSC.Shelf")
+# nwfsc_hypoxia <- nwfscSurvey::pull_bio(survey = "NWFSC.Hypoxia")
+# nwfsc_hypoxia <- nwfscSurvey::pull_catch(survey = "NWFSC.Hypoxia", common_name = "widow rockfish")
+# afsc_slopeS <- nwfscSurvey::pull_bio(survey = "AFSC.Slope")
 
 afsc <- afsc %>%
   semi_join(haul, by = "event_id") %>%
@@ -136,7 +144,98 @@ nwfsc_slope <- nwfsc_slope %>%
     !if_all(c(length_cm, weight_kg, sex, age), is.na)
   )
 
-biol_data <- bind_rows(afsc, nwfsc_combo, nwfsc_slope)
+#The following species do not having matching scientific names in afsc_slope 
+#length data and species
+# [1] "sandpaper skate"                   
+# [2] "rougheye and blackspotted rockfish"
+# [3] "Pacific lamprey"                   
+# [4] "kelp snailfish"                    
+# [5] "fish unident."                     
+# [6] "blacksmelt unident."               
+# [7] "rockfish unident." 
+#Set some species scientific names to match those in species so they aren't removed. 
+#See details in modify_complex_names.R
+afsc_slope$length_data <- modify_afsc_slope_complex_names(afsc_slope$length_data)
+
+#AFSC slope data is split like triennial. At times it has no 
+#unique identifier between the two datasets (lengths and ages). 
+#For records with no clear identifier (same Trawl_id, species, sex, length) just
+#assign an age to one of the lengths. Since length data are same, doesn't affect
+#our purpose. Do so by adding a counter to any unidentifiable lengths and ages 
+#Also, AFSC slope data are not in the haul database. 
+#For bio data this isn't a problem so remove the linkage with haul
+afsc_slope_length <- afsc_slope$length_data %>%
+  mutate(Trawl_id = as.double(Trawl_id)) %>%
+  #semi_join(haul, by = c("Trawl_id" = "event_id")) 
+  mutate(scientific_name = tolower(Scientific_name)) %>%
+  semi_join(
+    species %>% mutate(scientific_name = tolower(scientific_name)),
+    by = "scientific_name"
+  ) %>%
+  left_join(
+    species %>% mutate(scientific_name = tolower(scientific_name)),
+    by = "scientific_name"
+  ) %>%
+  #Add a counter for duplicates
+  group_by(Trawl_id, Common_name, Sex, Length_cm) %>%
+  mutate(Counter = row_number()) %>%
+  ungroup() 
+
+#The following species do not having matching scientific names in afsc_slope 
+#age data and species. 
+# [1] "rougheye and blackspotted rockfish"
+# [2] "sandpaper skate" 
+#Set scientific names to match those in species. See details in modify_complex_names.R
+afsc_slope$age_data <- modify_afsc_slope_complex_names(afsc_slope$age_data)
+
+afsc_slope_age <- afsc_slope$age_data %>%
+  mutate(Trawl_id = as.double(Trawl_id)) %>%
+  #semi_join(haul, by = c("Trawl_id" = "event_id")) %>%
+  mutate(scientific_name = tolower(Scientific_name)) %>%
+  semi_join(
+    species %>% mutate(scientific_name = tolower(scientific_name)),
+    by = "scientific_name"
+  ) %>%
+  left_join(
+    species %>% mutate(scientific_name = tolower(scientific_name)),
+    by = "scientific_name"
+  ) %>%
+  #Add a counter for duplicates
+  group_by(Trawl_id, Common_name, Sex, Length_cm) %>%
+  mutate(Counter = row_number()) %>%
+  ungroup()
+
+#Now add ages to the length data. Note using the 'by' parameters automatically
+#joins on common variables
+afsc_slope_all <- afsc_slope_length %>%
+  left_join(
+    afsc_slope_age
+  ) %>%
+  transmute(
+    event_id = Trawl_id,
+    year = Year,
+    survey_id = "AFSC Slope",
+    weight_kg = Weight_kg,
+    age = Age,
+    length_cm = Length_cm,
+    species_id,
+    sex = Sex,
+    sex = case_when(
+      sex == c('M') ~ "male",
+      sex == c('F') ~ "female",
+      sex == c('U') ~ "unknown"
+    ),
+    common_name = tolower(Common_name),
+    lat = Latitude_dd,
+    lon = Longitude_dd
+  ) %>%
+  filter(
+    !if_all(c(length_cm, weight_kg, sex, age), is.na)
+  ) %>%
+  as.data.frame()
+
+
+biol_data <- bind_rows(afsc, nwfsc_combo, nwfsc_slope, afsc_slope_all)
 #saveRDS(biol_data, "data/biol_data.rds")
 
 
